@@ -10,28 +10,58 @@ const app = express();
 
 const server = http.createServer(app);
 
+/*
+  EXPRESS CORS
+*/
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://real-time-helpdesk-dashboard-fronte.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT"],
+    credentials: true
+  })
+);
+
+app.use(express.json());
+
+/*
+  SOCKET.IO
+*/
 const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "https://syncdesk.vercel.app"
+      "https://real-time-helpdesk-dashboard-fronte.vercel.app"
     ],
-    methods: ["GET", "POST", "PUT"]
-  }
+    methods: ["GET", "POST", "PUT"],
+    credentials: true
+  },
+
+  transports: ["websocket", "polling"],
+
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
-app.use(cors());
-
-app.use(express.json());
-
+/*
+  ROUTES
+*/
 app.use("/api/tickets", ticketRoutes);
 
 app.get("/", (req, res) => {
   res.send("SyncDesk Backend Running");
 });
 
+/*
+  SOCKET HANDLER
+*/
 socketHandler(io);
 
+/*
+  START SERVER
+*/
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
